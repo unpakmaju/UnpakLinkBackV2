@@ -323,11 +323,10 @@ func JWTMiddleware(publicKey *rsa.PublicKey) fiber.Handler {
 		 * PARSE TOKEN
 		 * ========================= */
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-			_, ok := t.Method.(*jwt.SigningMethodHMAC)
-			if ok {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); ok {
 				return jwtSecret, nil
 			}
-			if t.Method.Alg() == jwt.SigningMethodRS512.Alg() {
+			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
 				return publicKey, nil
 			}
 
@@ -382,8 +381,8 @@ func JWTMiddleware(publicKey *rsa.PublicKey) fiber.Handler {
 		 * ========================= */
 		var sid string
 
-		// jika RS512 ambil employeeid
-		if token.Method.Alg() == jwt.SigningMethodRS512.Alg() {
+		// jika RSA (Keycloak SSO) ambil employeeid / adm_pusat
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); ok {
 			var groups []string
 
 			if memberOf, ok := claims["group"].([]interface{}); ok {

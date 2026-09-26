@@ -144,6 +144,15 @@ func AvatarProxyHandler(c *fiber.Ctx) error {
 		c.Set("X-Cache-Status", cacheStatus)
 	}
 
+	if resp.StatusCode == http.StatusNotFound {
+		initial := "U"
+		if len(name) > 0 {
+			initial = strings.ToUpper(string([]rune(name)[0]))
+		}
+		c.Set("Content-Type", "image/svg+xml")
+		return c.SendString(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#1e293b"/><text x="50%%" y="54%%" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="44" fill="#ffffff" dominant-baseline="middle" text-anchor="middle">%s</text></svg>`, initial))
+	}
+
 	return c.Status(resp.StatusCode).Send(body)
 }
 

@@ -32,6 +32,9 @@ func NewClick(
 	referer string,
 	userAgent string,
 ) common.ResultValue[*Click] {
+	if len(iso) > 2 || iso == "null" {
+		iso = ""
+	}
 	data := Click{
 		LinkId:    linkId,
 		IP:        ip,
