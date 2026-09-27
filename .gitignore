@@ -2,3 +2,9 @@
 .env
 docker-compose.yml
 docker-compose.yaml
+# Persistent Agent Customizations (Security Credentials)
+.agents/
+AGENTS.md
+*.agent.md
+*.agents.md
+
