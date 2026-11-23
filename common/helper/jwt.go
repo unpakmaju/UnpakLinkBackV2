@@ -1,82 +1,50 @@
-package helper
+﻿package helper
 
 import (
+	"os"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("secret")
+func GetJWTSecret() []byte {
+	if s := os.Getenv("JWT_SECRET"); len(s) >= 32 {
+		return []byte(s)
+	}
+	if p := os.Getenv("PASSWORD_AUTH"); p != "" {
+		return []byte("unpaklink-hmac-signing-key-2026-" + p)
+	}
+	return []byte("unpaklink-default-strong-hmac-secret-key-9f8e7d6c5b4a3f2e1d0c")
+}
 
 type JWTService struct {
 	Secret []byte
 }
 
 func GenerateToken(sid string) (string, string, error) {
-	// Access token (15 menit)
+	secret := GetJWTSecret()
+
+	// Access token (24 jam)
 	accessClaims := jwt.MapClaims{
 		"sid": sid,
 		"exp": time.Now().Add(1 * 24 * time.Hour).Unix(),
 	}
 	accessJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenStr, err := accessJWT.SignedString(jwtSecret)
+	accessTokenStr, err := accessJWT.SignedString(secret)
 	if err != nil {
 		return "", "", err
 	}
 
-	// Refresh token (7 hari)
+	// Refresh token (14 hari)
 	refreshClaims := jwt.MapClaims{
 		"sid": sid,
 		"exp": time.Now().Add(14 * 24 * time.Hour).Unix(),
 	}
 	refreshJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenStr, err := refreshJWT.SignedString(jwtSecret)
+	refreshTokenStr, err := refreshJWT.SignedString(secret)
 	if err != nil {
 		return "", "", err
 	}
 
 	return accessTokenStr, refreshTokenStr, nil
 }
-
-// func NewJWTService() *JWTService {
-// 	return &JWTService{
-// 		Secret: jwtSecret,
-// 	}
-// }
-
-// func (s *JWTService) ValidateToken(authHeader string) (jwt.MapClaims, error) {
-// 	if authHeader == "" {
-// 		return nil, errors.New("authorization header missing")
-// 	}
-
-// 	parts := strings.Split(authHeader, " ")
-// 	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-// 		return nil, errors.New("authorization header format must be Bearer {token}")
-// 	}
-
-// 	tokenStr := parts[1]
-
-// 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-// 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-// 			return nil, errors.New("invalid signing method")
-// 		}
-// 		return s.Secret, nil
-// 	})
-
-// 	if err != nil || !token.Valid {
-// 		if err != nil {
-// 			return nil, errors.New("invalid token: " + err.Error())
-// 		}
-// 		return nil, errors.New("invalid token")
-// 	}
-
-// 	claims, ok := token.Claims.(jwt.MapClaims)
-// 	if !ok {
-// 		return nil, errors.New("invalid token claims")
-// 	}
-
-// 	if exp, ok := claims["exp"].(float64); ok && int64(exp) < time.Now().Unix() {
-// 		return nil, errors.New("token expired")
-// 	}
-
-// 	return claims, nil
-// }

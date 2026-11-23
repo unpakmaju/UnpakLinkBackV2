@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"context"
@@ -107,7 +107,7 @@ func main() {
 		ProxyHeader:  fiber.HeaderXForwardedFor,
 	})
 	app.Use(recover.New(recover.Config{
-		EnableStackTrace: true,
+		EnableStackTrace: os.Getenv("APP_DEBUG") == "true",
 	}))
 
 	// app.Use(cors.New(cors.Config{
@@ -145,13 +145,13 @@ func main() {
 		db, err = NewMySQL(
 			DB_SOURCE,
 		)
-		log.Println("db:", DB_SOURCE)
+		log.Println("Database Main initialized")
 		return err
 	})
 
 	mustStart("Database Simak", func() error {
 		var err error
-		log.Println("dbsimak:", DB_SIMAK)
+		log.Println("Database Simak initialized")
 		dbSimak, err = NewMySQL(
 			DB_SIMAK,
 		)
@@ -209,7 +209,7 @@ func main() {
 		DB: db,
 	}
 
-	app.Get("/swagger/*", swagger.HandlerDefault)
+	if os.Getenv("APP_DEBUG") == "true" { app.Get("/swagger/*", swagger.HandlerDefault) }
 	go commoninfra.StartOutboxWorker(ctx, outboxProcessor)
 	go linkInfrastructure.StartCrontabWorker(ctx, crontabProcessor)
 	app.Listen(":3000")
@@ -269,7 +269,7 @@ func (b *ValidationBehavior) Handle(
 		}
 
 	default:
-		// request lain → skip validation
+		// request lain â†’ skip validation
 	}
 
 	return next(ctx)
@@ -309,3 +309,4 @@ func NewMySQL(dsn string) (*gorm.DB, error) {
 
 	return db, nil
 }
+

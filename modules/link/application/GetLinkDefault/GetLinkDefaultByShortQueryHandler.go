@@ -1,4 +1,4 @@
-package application
+﻿package application
 
 import (
 	"context"
@@ -34,8 +34,44 @@ func (h *GetLinkDefaultByShortQueryHandler) Handle(
 		return nil, err
 	}
 
-	if q.DoCounter {
+	now := time.Now()
+	isWaiting := false
+	isExpired := false
+	if link.StartAccess != nil && link.EndAccess != nil {
+		if now.Before(*link.StartAccess) {
+			isWaiting = true
+		} else if now.After(*link.EndAccess) {
+			isExpired = true
+		}
+	}
 
+	hasPassword := link.Password != nil && *link.Password != ""
+
+	// Jika waktu akses belum dimulai atau sudah expired, sembunyikan LongUrl & Password asli
+	if isWaiting || isExpired {
+		link.LongUrl = ""
+		if hasPassword {
+			link.Password = helper.StrPtr("PROTECTED")
+		}
+		return link, nil
+	}
+
+	// Jika link memiliki proteksi password
+	if hasPassword {
+		if q.Code == "" {
+			// Request awal: jangan hitung klik, sembunyikan LongUrl dan mask Password
+			link.LongUrl = ""
+			link.Password = helper.StrPtr("PROTECTED")
+			return link, nil
+		}
+		if q.Code != *link.Password {
+			return nil, commoninfra.NewResponseError("Link.InvalidPassword", "Password tidak sesuai")
+		}
+		// Password cocok: hapus password dari response sebelum dikirim
+		link.Password = nil
+	}
+
+	if q.DoCounter {
 		err := h.Repo.WithTx(ctx, func(txRepo domainLink.ILinkRepositoryTx) error {
 
 			event := eventLink.NewLinkCountEvent(
@@ -55,7 +91,7 @@ func (h *GetLinkDefaultByShortQueryHandler) Handle(
 
 			outbox := commoninfra.OutboxMessage{
 				ID:            event.ID(),
-				Type:          commoninfra.CanonicalTypeName(event), //reflect.TypeOf(event).String(),
+				Type:          commoninfra.CanonicalTypeName(event),
 				Payload:       string(payload),
 				OccurredOnUTC: event.OccurredOnUTC(),
 			}

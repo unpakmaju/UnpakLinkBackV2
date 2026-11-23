@@ -1,4 +1,4 @@
-package presentation
+﻿package presentation
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	helper "UnpakSiamida/common/helper"
 	commoninfra "UnpakSiamida/common/infrastructure"
 	"encoding/json"
 	"io/ioutil"
@@ -30,7 +31,7 @@ import (
 // =======================
 // CONFIG
 // =======================
-var jwtSecret = []byte("secret")
+// jwtSecret managed via helper.GetJWTSecret()
 
 type HeaderSecurityConfig struct {
 	BlacklistedHeaderNames map[string]bool
@@ -261,7 +262,7 @@ func HeaderSecurityMiddleware(cfg *HeaderSecurityConfig) fiber.Handler {
 // 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 // 				return nil, errors.New("invalid signing method")
 // 			}
-// 			return jwtSecret, nil
+// 			return helper.GetJWTSecret(), nil
 // 		})
 
 // 		if err != nil || !token.Valid {
@@ -324,7 +325,7 @@ func JWTMiddleware(publicKey *rsa.PublicKey) fiber.Handler {
 		 * ========================= */
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); ok {
-				return jwtSecret, nil
+				return helper.GetJWTSecret(), nil
 			}
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
 				return publicKey, nil
@@ -675,3 +676,4 @@ func SmartCompress() fiber.Handler {
 		})(c)
 	}
 }
+

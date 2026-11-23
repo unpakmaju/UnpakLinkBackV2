@@ -1,4 +1,4 @@
-package presentation
+﻿package presentation
 
 import (
 	"context"
@@ -466,7 +466,7 @@ func GetAllLinksHandlerfunc(c *fiber.Ctx) error {
 		}
 	}
 
-	if len(sid) > 0 && sid != os.Getenv("Administrator") {
+	if sid != os.Getenv("Administrator") {
 		filters = append(filters, commondomain.SearchFilter{
 			Field:    "creator",
 			Operator: "eq",
@@ -541,3 +541,4 @@ func ModuleLink(app *fiber.App) {
 
 	app.Get("/api/link/short/:short", commonpresentation.SmartCompress(), GetLinkByShortHandlerfunc)
 }
+

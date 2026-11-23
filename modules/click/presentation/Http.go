@@ -1,4 +1,4 @@
-package presentation
+﻿package presentation
 
 import (
 	"context"
@@ -68,7 +68,7 @@ func GetAllClicksHandlerfunc(c *fiber.Ctx) error {
 		}
 	}
 
-	if len(sid) > 0 && sid != os.Getenv("Administrator") {
+	if sid != os.Getenv("Administrator") {
 		filters = append(filters, commondomain.SearchFilter{
 			Field:    "creator",
 			Operator: "eq",
@@ -118,3 +118,4 @@ func ModuleClick(app *fiber.App) {
 
 	app.Get("/api/clicks", commonpresentation.SmartCompress(), commonpresentation.JWTMiddleware(pubKey), GetAllClicksHandlerfunc)
 }
+
