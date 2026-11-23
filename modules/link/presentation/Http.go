@@ -505,6 +505,75 @@ func GetAllLinksHandlerfunc(c *fiber.Ctx) error {
 	return adapter.Send(c, result)
 }
 
+var reservedShortSlugs = map[string]bool{
+	"dashboard":    true,
+	"link":         true,
+	"links":        true,
+	"callback":     true,
+	"callback_sso": true,
+	"api":          true,
+	"assets":       true,
+	"login":        true,
+	"logout":       true,
+	"swagger":      true,
+}
+
+func CheckLinkAvailabilityHandlerfunc(c *fiber.Ctx) error {
+	short := strings.TrimSpace(c.Params("short"))
+	excludeUuid := strings.TrimSpace(c.Query("exclude_uuid"))
+
+	if short == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"available": false,
+			"shortUrl":  short,
+			"reason":    "empty",
+			"message":   "Link pendek tidak boleh kosong",
+		})
+	}
+
+	if reservedShortSlugs[strings.ToLower(short)] {
+		return c.Status(200).JSON(fiber.Map{
+			"available": false,
+			"shortUrl":  short,
+			"reason":    "reserved",
+			"message":   "Nama link ini dicadangkan oleh sistem",
+		})
+	}
+
+	query := GetLinkDefault.GetLinkDefaultByShortQuery{
+		Short:     short,
+		DoCounter: false,
+	}
+
+	link, err := mediatr.Send[
+		GetLinkDefault.GetLinkDefaultByShortQuery,
+		*Linkdomain.LinkDefault,
+	](context.Background(), query)
+
+	if err != nil || link == nil {
+		return c.Status(200).JSON(fiber.Map{
+			"available": true,
+			"shortUrl":  short,
+			"message":   "Link pendek tersedia dan dapat digunakan",
+		})
+	}
+
+	if excludeUuid != "" && strings.EqualFold(link.UUID.String(), excludeUuid) {
+		return c.Status(200).JSON(fiber.Map{
+			"available": true,
+			"shortUrl":  short,
+			"message":   "Ini adalah link pendek Anda saat ini",
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"available": false,
+		"shortUrl":  short,
+		"reason":    "taken",
+		"message":   "Link pendek sudah digunakan oleh pengguna lain",
+	})
+}
+
 func SetupUuidLinksHandlerfunc(c *fiber.Ctx) error {
 	cmd := SetupUuidLink.SetupUuidLinkCommand{}
 
@@ -539,6 +608,8 @@ func ModuleLink(app *fiber.App) {
 	app.Get("/api/link/:uuid", commonpresentation.SmartCompress(), commonpresentation.JWTMiddleware(pubKey), GetLinkHandlerfunc)
 	app.Get("/api/links", commonpresentation.SmartCompress(), commonpresentation.JWTMiddleware(pubKey), GetAllLinksHandlerfunc)
 
+	app.Get("/api/link/check/:short", commonpresentation.SmartCompress(), CheckLinkAvailabilityHandlerfunc)
 	app.Get("/api/link/short/:short", commonpresentation.SmartCompress(), GetLinkByShortHandlerfunc)
 }
+
 

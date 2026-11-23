@@ -1,4 +1,4 @@
-package infrastructure
+﻿package infrastructure
 
 import (
 	commondomainLink "UnpakSiamida/common/domain"
@@ -179,7 +179,7 @@ func (r *LinkRepository) GetAll(
 			case "in":
 				db = db.Where(fmt.Sprintf("%s IN (?)", col), strings.Split(value, ","))
 			default:
-				// default fallback → LIKE
+				// default fallback â†’ LIKE
 				db = db.Where(fmt.Sprintf("%s LIKE ?", col), "%"+value+"%")
 			}
 		}
@@ -330,3 +330,4 @@ func (r *LinkRepository) InsertOutbox(
 ) error {
 	return r.db.WithContext(ctx).Create(msg).Error
 }
+

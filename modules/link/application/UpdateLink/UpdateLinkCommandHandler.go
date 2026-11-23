@@ -1,7 +1,8 @@
-package application
+﻿package application
 
 import (
 	"context"
+	"strings"
 
 	domainlink "UnpakSiamida/modules/link/domain"
 	"time"
@@ -33,7 +34,7 @@ func (h *UpdateLinkCommandHandler) Handle(
 	// GET EXISTING link
 	// -------------------------
 	countLink := h.Repo.CountLink(ctx, cmd.ShortUrl, cmd.Creator)
-	existingLink, err := h.Repo.GetByUuid(ctx, linkUUID) // ← memastikan pakai nama interface yg benar
+	existingLink, err := h.Repo.GetByUuid(ctx, linkUUID) // â† memastikan pakai nama interface yg benar
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return "", domainlink.NotFound(cmd.Uuid)
@@ -49,7 +50,7 @@ func (h *UpdateLinkCommandHandler) Handle(
 		linkUUID,
 		cmd.ShortUrl,
 		cmd.Creator,
-		countLink == 0 || countLink == 1,
+		strings.EqualFold(existingLink.ShortUrl, cmd.ShortUrl) || countLink == 0,
 	)
 
 	if !result.IsSuccess {
@@ -67,3 +68,4 @@ func (h *UpdateLinkCommandHandler) Handle(
 
 	return updatedLink.UUID.String(), nil
 }
+
