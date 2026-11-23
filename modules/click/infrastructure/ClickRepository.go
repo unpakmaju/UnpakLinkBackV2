@@ -1,4 +1,4 @@
-package infrastructure
+﻿package infrastructure
 
 import (
 	commondomain "UnpakSiamida/common/domain"
@@ -60,12 +60,12 @@ func (r *ClickRepository) GetAll(
 	var rows []domainClick.ClickDefault
 	var total int64
 
-	base := r.db.WithContext(ctx).Debug().
+	base := r.db.WithContext(ctx).
 		Model(&domainClick.Click{}).
 		Clauses(hints.ForceIndex("PRIMARY"))
 
 	// -------------------------------------------------
-	// FILTER (khusus kolom link → pakai subquery, kolom click → langsung)
+	// FILTER (khusus kolom link â†’ pakai subquery, kolom click â†’ langsung)
 	// -------------------------------------------------
 	hasLinkFilter := false
 	linkSub := r.db.Model(&domainLink.Link{}).Select("id")
@@ -173,7 +173,7 @@ func (r *ClickRepository) GetAll(
 	}
 
 	var links []domainLink.Link
-	if err := r.db.WithContext(ctx).Debug().
+	if err := r.db.WithContext(ctx).
 		Model(&domainLink.Link{}).
 		Clauses(hints.ForceIndex("PRIMARY")).
 		Where("id IN ?", linkIDs).
@@ -209,3 +209,4 @@ func (r *ClickRepository) GetAll(
 
 	return rows, total, nil
 }
+

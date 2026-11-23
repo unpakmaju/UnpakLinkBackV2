@@ -25,7 +25,7 @@ func (r *LinkRepository) CountLink(ctx context.Context, link string, creator str
 	var Link domainLink.Link
 	var count int64
 
-	err := r.db.Debug().WithContext(ctx).
+	err := r.db.WithContext(ctx).
 		Model(Link).
 		Where("creator = ?", creator).
 		Where("short_url = ?", link).
@@ -134,7 +134,7 @@ func (r *LinkRepository) GetAll(
 	var Links = make([]domainLink.Link, 0)
 	var total int64
 
-	db := r.db.WithContext(ctx).Debug().Model(&domainLink.Link{})
+	db := r.db.WithContext(ctx).Model(&domainLink.Link{})
 
 	// -------------------------------
 	// SEARCH FILTERS (ADVANCED)
@@ -330,4 +330,5 @@ func (r *LinkRepository) InsertOutbox(
 ) error {
 	return r.db.WithContext(ctx).Create(msg).Error
 }
+
 
