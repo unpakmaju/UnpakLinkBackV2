@@ -34,27 +34,7 @@ func (h *GetLinkDefaultByShortQueryHandler) Handle(
 		return nil, err
 	}
 
-	now := time.Now()
-	isWaiting := false
-	isExpired := false
-	if link.StartAccess != nil && link.EndAccess != nil {
-		if now.Before(*link.StartAccess) {
-			isWaiting = true
-		} else if now.After(*link.EndAccess) {
-			isExpired = true
-		}
-	}
-
 	hasPassword := link.Password != nil && *link.Password != ""
-
-	// Jika waktu akses belum dimulai atau sudah expired, sembunyikan LongUrl & Password asli
-	if isWaiting || isExpired {
-		link.LongUrl = ""
-		if hasPassword {
-			link.Password = helper.StrPtr("PROTECTED")
-		}
-		return link, nil
-	}
 
 	// Jika link memiliki proteksi password
 	if hasPassword {

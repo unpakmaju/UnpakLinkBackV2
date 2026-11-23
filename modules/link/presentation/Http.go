@@ -389,8 +389,14 @@ func GetLinkByShortHandlerfunc(c *fiber.Ctx) error {
 	referer := c.Get("Referer")
 	userAgent := c.Get("User-Agent")
 
+	code := strings.TrimSpace(c.Query("code"))
+	if code == "" {
+		code = strings.TrimSpace(c.Get("X-Link-Password"))
+	}
+
 	query := GetLinkDefault.GetLinkDefaultByShortQuery{
 		Short:     short,
+		Code:      code,
 		DoCounter: apiKey == os.Getenv("Administrator"),
 		IpClient:  helper.StrPtr(ipClient),
 		IP:        helper.StrPtr(ip),
@@ -540,8 +546,14 @@ func CheckLinkAvailabilityHandlerfunc(c *fiber.Ctx) error {
 		})
 	}
 
+	code := strings.TrimSpace(c.Query("code"))
+	if code == "" {
+		code = strings.TrimSpace(c.Get("X-Link-Password"))
+	}
+
 	query := GetLinkDefault.GetLinkDefaultByShortQuery{
 		Short:     short,
+		Code:      code,
 		DoCounter: false,
 	}
 
@@ -611,5 +623,6 @@ func ModuleLink(app *fiber.App) {
 	app.Get("/api/link/check/:short", commonpresentation.SmartCompress(), CheckLinkAvailabilityHandlerfunc)
 	app.Get("/api/link/short/:short", commonpresentation.SmartCompress(), GetLinkByShortHandlerfunc)
 }
+
 
 
